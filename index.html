@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>THREE.RegionGeometry</title>
+	<style>
+		
+		body {
+			padding: 0;
+			margin: 0;
+		}
+
+		#scene {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+		}
+
+		#text {
+			position: absolute;
+			left: 50%;
+			top: 10px;
+			transform: translate(-50%, 0);
+			color: #000;
+			font-family: monospace;
+			text-align: center;
+		}
+
+	</style>
+</head>
+<body>
+	<div id='scene'></div>
+	<div id='text'>THREE.RegionGeometry<br>Left - RegionGeometry | Right - EdgesGeometry</div>
+	<script src='https://threejs.org/build/three.min.js'></script>
+	<script src='https://threejs.org/examples/js/loaders/OBJLoader.js'></script>
+	<script src='https://threejs.org/examples/js/controls/OrbitControls.js'></script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js'></script>
+	<script src='RegionGeometry.js'></script>
+	<script>
+		
+		var renderer = new THREE.WebGLRenderer( {
+			antialias: true,
+			alpha: true
+		} );
+
+		var el = document.getElementById( 'scene' );
+
+		renderer.setSize( el.clientWidth, el.clientHeight );
+		renderer.setPixelRatio( window.devicePixelRatio );
+		renderer.setClearColor( 0xf4f4f4 );
+
+		el.appendChild( renderer.domElement );
+
+		var scene = new THREE.Scene();
+
+		var camera = new THREE.PerspectiveCamera( 70, el.clientWidth / el.clientHeight, 0.1, 1000 );
+
+		camera.position.z = 3;
+		camera.position.y = 3;
+		camera.lookAt( 0, 0, 0 );
+
+		var ambientLight = new THREE.AmbientLight( '#fff', 0.6 );
+		var pointLight = new THREE.PointLight( '#fff', 0.4 );
+		
+		camera.add( pointLight );
+		scene.add( ambientLight, camera );
+
+		var geometry = new THREE.SphereGeometry( 1, 40, 30 );
+		
+		var material = new THREE.MeshNormalMaterial( {
+			polygonOffset: true,
+			polygonOffsetFactor: 2,
+			color: '#333'
+		} );
+
+		var mesh1 = new THREE.Mesh( geometry, material );
+		mesh1.position.x = 1.40;
+
+		var mesh2 = mesh1.clone();
+		mesh2.position.x = -1.40;
+
+		scene.add( mesh1, mesh2 );
+
+		var edgesMaterial = new THREE.LineBasicMaterial( { color: '#222' } );
+
+		var edges1 = new THREE.LineSegments( new THREE.EdgesGeometry( geometry ), edgesMaterial );
+		var edges2 = new THREE.LineSegments( new THREE.RegionGeometry( geometry ), edgesMaterial );
+		mesh1.add( edges1 );
+		mesh2.add( edges2 );
+
+		var state = { angle: 1 };
+
+		var gui = new dat.GUI();
+
+		gui.add( state, 'angle', 0, 7, 0.01 ).onChange( function( value ) {
+
+			edges2.geometry.update( value );
+			edges1.geometry = new THREE.EdgesGeometry( geometry, value );
+
+		} );
+
+		var mouse = new THREE.Vector2();
+
+		function onMouseMove( evt ) {
+
+			mouse.set( 2 * evt.clientX / window.innerWidth - 1, -2 * evt.clientY / window.innerHeight + 1 )
+
+		}
+
+		window.addEventListener( 'mousemove', onMouseMove, false);
+
+		function animate() {
+
+			camera.position.x = camera.position.x * 0.9 + mouse.x * 0.1;
+			camera.position.y = camera.position.y * 0.9 + mouse.y * 0.1;
+			camera.lookAt( 0, 0, 0 );
+
+			renderer.render( scene, camera );
+			window.requestAnimationFrame( animate );
+
+		}
+
+		animate();
+
+	</script>
+</body>
+</html>
